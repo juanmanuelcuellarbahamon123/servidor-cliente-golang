@@ -5,4 +5,5 @@ type Usuario struct {
 	Apellido string `json:"apellido" db:"apellido"`
 	Correo   string `json:"correo" db:"correo"`
 	Password string `json:"password" db:"password"`
+	Rol      int    `json:"id_rol" db:"id_rol"`
 }

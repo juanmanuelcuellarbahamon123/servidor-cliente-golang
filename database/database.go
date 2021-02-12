@@ -12,7 +12,7 @@ func DBConnection() {
 	driver := "mysql"
 	user := "root"
 	password := ""
-	database := "prueba"
+	database := "proyecto_leo"
 	host := "localhost"
 	port := "3306"
 

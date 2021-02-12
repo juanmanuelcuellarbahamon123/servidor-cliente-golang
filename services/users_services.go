@@ -16,7 +16,7 @@ func ListarUsuarios(c *gin.Context) {
 
 	var usuarios []models.Usuario
 
-	err := database.DBClient.Select(&usuarios, "SELECT nombre,apellido,correo,password FROM usuarios")
+	err := database.DBClient.Select(&usuarios, "SELECT nombre,apellido,correo,password,id_rol FROM usuarios")
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -39,7 +39,7 @@ func ListarUsuario(c *gin.Context) {
 
 	var usuario models.Usuario
 
-	err2 := database.DBClient.Get(&usuario, "SELECT nombre,apellido,correo,password FROM usuarios WHERE id = ?", id)
+	err2 := database.DBClient.Get(&usuario, "SELECT nombre,apellido,correo,password,id_rol FROM usuarios WHERE id_usuario = ?", id)
 
 	if err2 != nil {
 		c.JSON(401, gin.H{
@@ -62,7 +62,7 @@ func EliminarUsuario(c *gin.Context) {
 		fmt.Println(err.Error())
 	}
 
-	res, err2 := database.DBClient.Exec("DELETE FROM usuarios WHERE id = ?", id)
+	res, err2 := database.DBClient.Exec("DELETE FROM usuarios WHERE id_usuario = ?", id)
 
 	if err2 != nil {
 		fmt.Println(err.Error())
@@ -95,7 +95,7 @@ func ActualizarUsuario(c *gin.Context) {
 		})
 	}
 
-	res, err3 := database.DBClient.Exec("UPDATE usuarios SET nombre = ?, apellido = ?, correo = ?, password = ? WHERE id = ?",
+	res, err3 := database.DBClient.Exec("UPDATE usuarios SET nombre = ?, apellido = ?, correo = ?, password = ? WHERE id_usuario = ?",
 		reqBody.Nombre,
 		reqBody.Apellido,
 		reqBody.Correo,
@@ -127,20 +127,35 @@ func AgregarUsuario(c *gin.Context) {
 		})
 	}
 
-	res, err2 := database.DBClient.Exec("INSERT INTO usuarios(nombre,apellido,correo,password) VALUES (?,?,?,?)",
-		reqBody.Nombre,
-		reqBody.Apellido,
-		reqBody.Correo,
-		reqBody.Password,
-	)
+	var email int
+	err2 := database.DBClient.Get(&email, "SELECT COUNT(*) FROM usuarios WHERE correo = ?", reqBody.Correo)
 
 	if err2 != nil {
 		fmt.Println(err2.Error())
 	}
 
+	if email > 0 {
+		c.JSON(401, gin.H{
+			"msg":   "Este correo ya existe",
+			"email": email,
+		})
+		return
+	}
+
+	_, err3 := database.DBClient.Exec("INSERT INTO usuarios(nombre,apellido,correo,password,id_rol) VALUES (?,?,?,?,?)",
+		reqBody.Nombre,
+		reqBody.Apellido,
+		reqBody.Correo,
+		reqBody.Password,
+		reqBody.Rol,
+	)
+
+	if err3 != nil {
+		fmt.Println(err3.Error())
+	}
+
 	c.JSON(200, gin.H{
 		"msg": "usuario agregado",
-		"res": res,
 	})
 
 }
